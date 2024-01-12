@@ -1,0 +1,157 @@
+<style>
+  /* Your CSS styles */
+  .container {
+    font-family: Arial, sans-serif;
+    width: 80%;
+    margin: auto;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 0;
+    border-bottom: 1px solid #ccc;
+  }
+
+  .header h1 {
+    margin: 0;
+    font-size: 22px;
+    color: #333;
+  }
+
+  .header a {
+    text-decoration: none;
+    color: #007bff;
+    font-weight: bold;
+    font-size: 16px;
+  }
+
+  .header ul {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    font-size: 16px;
+  }
+
+  .header ul li {
+    margin-right: 20px;
+  }
+
+  .header ul li a {
+    text-decoration: none;
+    color: #007bff;
+    font-weight: bold;
+  }
+
+  .main-content {
+    padding: 20px 0;
+  }
+
+  .signout-btn {
+    text-decoration: none;
+    color: #007bff;
+    font-weight: bold;
+    font-size: 16px;
+  }
+
+  #composeForm {
+    font-family: Arial, sans-serif;
+    width: 80%;
+    margin: auto;
+    margin-top: 50px;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+  }
+
+  input[type="text"],
+  input[type="file"],
+  select,
+  textarea {
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+  }
+
+  textarea {
+    resize: vertical;
+    height: 150px;
+  }
+
+  button[type="submit"] {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    background-color: #007bff;
+    color: #fff;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  button[type="submit"]:hover {
+    background-color: #0056b3;
+  }
+</style>
+
+<div class="container">
+  <div class="header">
+    <h1><%= user.fullname %> signed in</h1>
+    <ul>
+      <li><a href="/compose?email=<%= user.email %>">Compose</a></li>
+      <li><a href="/inbox?email=<%= user.email %>">Inbox</a></li>
+      <li><a href="/outbox?email=<%= user.email %>">Outbox</a></li>
+    </ul>
+    <a class="signout-btn" href="/signout">Sign out</a>
+  </div>
+  
+  <form id="composeForm">
+    <select id="recipient" required>
+      <% allUsers.forEach(user => { %>
+        <option value="<%= user.id %>"><%= user.fullname %></option>
+      <% }); %>
+    </select>
+    <input type="text" id="subject" placeholder="Subject">
+    <textarea id="body" placeholder="Email body"></textarea>
+    <button type="submit">Send</button>
+  </form>
+</div>
+
+<script>
+  document.getElementById('composeForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const recipientId = document.getElementById('recipient').value;
+    console.log('recipientID: ' +recipientId);
+    const subject = document.getElementById('subject').value;
+    const body = document.getElementById('body').value;
+
+    const formData = new FormData();
+    formData.append('recipientId', recipientId);
+    formData.append('subject', subject);
+    formData.append('body', body);
+
+    try {
+      const response = await fetch('/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({recipientId, subject, body})
+      });
+
+      if (response.ok) {
+        console.log('Email sent successfully!');
+        // Handle success
+      } else {
+        console.error('Failed to send email.');
+        // Handle failure
+      }
+    } catch (error) {
+      console.error('Error sending email:', error);
+      // Handle errors
+    }
+  });
+</script>

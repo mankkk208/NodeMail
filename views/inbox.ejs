@@ -1,0 +1,206 @@
+<style>
+  /* Your CSS styles */
+  .container {
+    font-family: Arial, sans-serif;
+    width: 80%;
+    margin: auto;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 0; /* Adjusted padding */
+    border-bottom: 1px solid #ccc;
+  }
+
+  .header h1 {
+    margin: 0;
+    font-size: 22px; /* Adjusted font size */
+    color: #333;
+  }
+
+  .header a {
+    text-decoration: none;
+    color: #007bff;
+    font-weight: bold;
+    font-size: 16px; /* Adjusted font size */
+  }
+
+  .header ul {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    font-size: 16px; /* Adjusted font size */
+  }
+
+  .header ul li {
+    margin-right: 20px;
+  }
+
+  .header ul li a {
+    text-decoration: none;
+    color: #007bff;
+    font-weight: bold;
+  }
+
+  .main-content {
+    padding: 20px 0;
+  }
+
+  .signout-btn {
+    text-decoration: none;
+    color: #007bff;
+    font-weight: bold;
+    font-size: 16px; /* Adjusted font size */
+  }
+
+  /* Add these styles for outbox to match inbox */
+  .email-item {
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+  }
+
+  .email-item p {
+    margin: 5px 0;
+  }
+
+  .pagination {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .pagination a {
+    text-decoration: none;
+    margin: 0 5px;
+    padding: 5px 10px;
+    border: 1px solid #007bff;
+    color: #007bff;
+    border-radius: 4px;
+  }
+
+  .pagination a:hover {
+    background-color: #007bff;
+    color: #fff;
+  }
+
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.8);
+  }
+  
+  .modal-content {
+    background-color: #fefefe;
+    margin: 10% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 60%; /* Adjusted width */
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+  }
+  
+  .close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  
+  .close:hover,
+  .close:focus {
+    color: #000;
+    text-decoration: none;
+  }
+</style>
+
+<div class="container">
+  <div class="header">
+    <h1><%= user.fullname %> signed in</h1>
+    <ul>
+      <li><a href="/compose?email=<%= user.email %>">Compose</a></li>
+      <li><a href="/inbox?email=<%= user.email %>">Inbox</a></li>
+      <li><a href="/outbox?email=<%= user.email %>">Outbox</a></li>
+    </ul>
+    <a class="signout-btn" href="/signout">Sign out</a>
+  </div>
+
+  <div class="main-content">
+    <div class="email-list">
+      <% if (displayedEmails && displayedEmails.length) { %>
+        <% displayedEmails.forEach(email => { %>
+          <div class="email-item">
+            <p>From: <%= email.fromUserEmail %></p>
+            <p>Subject: <%= email.subject %></p>
+            <p>Date: <%= email.timestamp %></p>
+            <button onclick="viewEmailDetails('<%= email.id %>')">View Details</button>
+          </div>
+        <% }); %>
+      <% } else { %>
+        <p>No emails to display.</p>
+      <% } %>
+    </div>
+
+    <div class="pagination">
+      <% for (let i = 1; i <= numPages; i++) { %>
+        <a href="/inbox?email=<%= user.email %>&page=<%= i %>"><%= i %></a>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<div id="emailModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal()">&times;</span>
+    <p class="from-user"></p>
+    <p class="subject"></p>
+    <p class="body"></p>
+    <p class="timestamp"></p>
+    <!-- Other email details can be added here -->
+  </div>
+</div>
+
+<script>
+  function viewEmailDetails(emailId) {
+    fetch(`/getEmailDetails/${emailId}`)  
+      .then(response => response.json())
+      .then(data => {
+        // Open the modal and populate it with email details
+        openModal(data);
+      })  
+      .catch(error => {
+        console.error('Error fetching email details:', error);
+        // Handle error
+      });
+  }
+
+  function openModal(emailDetails) {
+    const modal = document.getElementById('emailModal');
+    const fromUser = emailDetails.fromUserID;
+    const subject = emailDetails.subject;
+    const body = emailDetails.body;
+    const timestamp = new Date(emailDetails.timestamp).toLocaleString();
+    
+  
+    // Populate modal elements with email details
+    modal.querySelector('.from-user').textContent = `From: User ${fromUser}`;
+    modal.querySelector('.subject').textContent = `Subject: ${subject}`;
+    modal.querySelector('.body').textContent = `Body: ${body}`;
+    modal.querySelector('.timestamp').textContent = `Date: ${timestamp}`;
+  
+    // Display the modal
+    modal.style.display = 'block';
+  }
+  
+  function closeModal() {
+    const modal = document.getElementById('emailModal');
+    modal.style.display = 'none';
+  }
+</script>
